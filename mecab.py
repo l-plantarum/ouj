@@ -3,6 +3,11 @@
 import  MeCab
 import sys
 from pymongo import MongoClient
+import re
+
+# URLの正規表現
+urlpattern = r"^http[s]?://.*$"
+reurl = re.compile(urlpattern)
 
 #tagger = MeCab.Tagger('-F\s%f[6] -U\s%m -E\\n')
 tagger = MeCab.Tagger()
@@ -15,6 +20,8 @@ for qa in db.qa.find():
     lines = qa['body'].split()
     results = []
     for line in lines:
+        if (reurl.match(line)):
+            continue
         wordinfo = tagger.parse(line)
         doc = wordinfo.split('\n')
         for d in doc:
@@ -36,4 +43,5 @@ for qa in db.qa.find():
             'postdate': qa['postdate'],
             'words': results
     }
-    db.test20190429.insert_one(data)
+    break
+    db.test20190503.insert_one(data)
