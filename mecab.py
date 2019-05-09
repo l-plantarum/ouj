@@ -23,15 +23,20 @@ for qa in db.qa.find():
         if (reurl.match(line)):
             continue
         wordinfo = tagger.parse(line)
+
         doc = wordinfo.split('\n')
         for d in doc:
-            if (d == '' or d == 'EOS'):
+            if (d in ['','EOS', '/', '[', ']', '(', ')', '「', '」']):
                 continue
             dic = d.split('\t')
-            defs = dic[1].split(',')
-            if (defs[0] in ["助詞", "助動詞", "記号", "BOS/EOS"]):
+            if (dic[0] in [ '/', '[', ']', '(', ')', '「', '」']):
                 continue
-            if (defs[1] in ["非自立"]):
+            defs = dic[1].split(',')
+            if (defs[0] in ["連体詞", "副詞", "接続詞", "助詞", "助動詞", "記号", "数", "BOS/EOS"]):
+                continue
+            if (defs[1] in ["非自立", "数"]):
+                continue
+            if (defs[6] in ["ない", "する", "やる", "なる", "できる", "れる"]):
                 continue
             if (defs[6] == '*'):
                 results.append(dic[0])
@@ -43,5 +48,4 @@ for qa in db.qa.find():
             'postdate': qa['postdate'],
             'words': results
     }
-    break
-    db.test20190503.insert_one(data)
+    db.test20190505a.insert_one(data)
