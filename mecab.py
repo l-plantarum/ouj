@@ -20,7 +20,7 @@ ZEN = "".join(chr(0xff01 + i) for i in range(94))
 HAN = "".join(chr(0x21 + i) for i in range(94))
 convtbl = str.maketrans(ZEN, HAN)
 # とりあえずちょっとだけとってみる
-for qa in db.qa20191103.find():
+for qa in db.qa20200113.find():
     lines = qa['body'].split()
     results = []
     for line in lines:
@@ -48,6 +48,8 @@ for qa in db.qa20191103.find():
             if (dic[0] in [ '/', '[', ']', '(', ')', '「', '」']):
                 continue
             defs = dic[1].split(',')
+            if (defs[6] == "*"):
+                continue
             if (defs[0] in ["連体詞", "副詞", "接続詞", "助詞", "助動詞", "記号", "BOS/EOS"]):
                 continue
             if (defs[1] in ["非自立"]):
@@ -67,6 +69,7 @@ for qa in db.qa20191103.find():
             '_id': qa['_id'],
             'url': qa['url'],
             'postdate': qa['postdate'],
-            'words': results
+            'words': results,
+	    'nwords': len(results)
     }
-    db.test20191104.insert_one(data)
+    db.test20200304.insert_one(data)
