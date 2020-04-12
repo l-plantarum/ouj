@@ -23,6 +23,7 @@ convtbl = str.maketrans(ZEN, HAN)
 for qa in db.qa20200113.find():
     lines = qa['body'].split()
     results = []
+    nmorph = 0
     for line in lines:
         if (reurl.match(line)):
             continue
@@ -38,11 +39,12 @@ for qa in db.qa20200113.find():
         wordinfo = re.sub("高校?[3三](年生?)?",  "高3", wordinfo)
 
         doc = wordinfo.split('\n')
+        nmorph += len(doc)
         for i  in range(len(doc)):
             d = doc[i]
             i = i + 1
         # for d in doc:
-            if (d in ['','EOS', '/', '[', ']', '(', ')', '「', '」']):
+            if (d in ['','EOS']):
                 continue
             dic = d.split('\t')
             if (dic[0] in [ '/', '[', ']', '(', ')', '「', '」']):
@@ -58,18 +60,22 @@ for qa in db.qa20200113.find():
                 continue
             if (defs[6] in ["私", "志望", "高校", "志望", "合格"]):
                 continue
-            if (defs[6] == '*'):
+            elif (defs[1] == "数"):
                 results.append(dic[0])
+            if (defs[6] == '*'):
+                results.append(defs[7])
             else:
                 results.append(defs[6])
 
     # 数値等
 
-    data = {
-            '_id': qa['_id'],
-            'url': qa['url'],
-            'postdate': qa['postdate'],
-            'words': results,
-	    'nwords': len(results)
-    }
-    db.test20200304.insert_one(data)
+    if nmorph > 20:
+	    data = {
+		    '_id': qa['_id'],
+		    'url': qa['url'],
+		    'postdate': qa['postdate'],
+		    'words': results,
+		    'nmorpy': nmorph,
+		    'nwords': len(results)
+	    }
+	    db.test20200410.insert_one(data)
