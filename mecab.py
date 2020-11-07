@@ -4,6 +4,7 @@ import  MeCab
 import sys
 from pymongo import MongoClient
 import re
+import datetime
 
 # URLの正規表現
 urlpattern = r"^http[s]?://.*$"
@@ -15,12 +16,29 @@ tagger = MeCab.Tagger()
 client = MongoClient('mongodb://localhost:27017/')
 db = client.local
 
+now = datetime.datetime.now()
+today = "{0:%Y%m%d}".format(now)
+
+
+
+if len(sys.argv) == 1:
+	indb = "qa"
+	outdb = indb + today 
+else:
+	indb = sys.argv[1]
+	outdb = sys.argv[1] + today
+
+print(outdb)
+if (db[indb].count() == 0):
+	print("no database {}".format(indb))
+	sys.exit(1)
+
 i = 0
 ZEN = "".join(chr(0xff01 + i) for i in range(94))
 HAN = "".join(chr(0x21 + i) for i in range(94))
 convtbl = str.maketrans(ZEN, HAN)
 # とりあえずちょっとだけとってみる
-for qa in db.qa20200113.find():
+for qa in db[indb].find():
     lines = qa['body'].split()
     results = []
     nmorph = 0
@@ -58,6 +76,8 @@ for qa in db.qa20200113.find():
                 continue
             if (defs[6] in ["ない", "する", "やる", "なる", "できる", "れる"]):
                 continue
+            if (defs[6] in ["大学", "ある", "コロナ", "思う", "今", "受験", "学校", "影響", "勉強"]):
+                continue
             if (defs[6] in ["私", "志望", "高校", "志望", "合格"]):
                 continue
             elif (defs[1] == "数"):
@@ -69,6 +89,9 @@ for qa in db.qa20200113.find():
 
     # 数値等
 
+    if indb == "niiqa":
+	    qa['url'] = qa['qid']
+
     if nmorph > 20:
 	    data = {
 		    '_id': qa['_id'],
@@ -78,4 +101,4 @@ for qa in db.qa20200113.find():
 		    'nmorpy': nmorph,
 		    'nwords': len(results)
 	    }
-	    db.test20200410.insert_one(data)
+	    db[outdb].insert_one(data)
